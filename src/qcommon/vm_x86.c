@@ -74,7 +74,6 @@ int qftol0E7F( void );
 int qftol0F7F( void );
 
 
-static	int		ftolPtr = (int)qftol0F7F;
 #endif // FTOL_PTR
 
 #endif
@@ -1025,7 +1024,7 @@ void VM_Compile( vm_t *vm, vmHeader_t *header ) {
 			// call the library conversion function
 			EmitString( "D9 07" );		// fld dword ptr [edi]
 			EmitString( "FF 15" );		// call ftolPtr
-			Emit4( (int)&ftolPtr );
+			Emit4( (int)&qftol0F7F);
 			EmitCommand(LAST_COMMAND_MOV_EDI_EAX);		// mov dword ptr [edi], eax
 #endif
 			break;

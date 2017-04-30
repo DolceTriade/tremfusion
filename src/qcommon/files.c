@@ -207,7 +207,6 @@ typedef struct searchpath_s {
 static	char		fs_gamedir[MAX_OSPATH];	// this will be a single file name with no separators
 static	cvar_t		*fs_debug;
 static	cvar_t		*fs_homepath;
-static	cvar_t		*fs_extrapath;
 
 #ifdef MACOS_X
 // Also search the .app bundle for .pk3 files
@@ -596,18 +595,6 @@ qboolean FS_SV_FileExists( const char *file )
 		fclose( f );
 		return qtrue;
 	}
-
-	if (Q_stricmp(fs_homepath->string,fs_extrapath->string)) {
-		testpath = FS_BuildOSPath( fs_extrapath->string, file, "");
-		testpath[strlen(testpath)-1] = '\0';
-
-		f = fopen( testpath, "rb" );
-		if (f) {
-			fclose( f );
-			return qtrue;
-		}
-	}
-
 	return qfalse;
 }
 
@@ -734,21 +721,6 @@ int FS_SV_FOpenFileRead( const char *filename, fileHandle_t *fp ) {
 	fsh[f].handleSync = qfalse;
 	if (!fsh[f].handleFiles.file.o)
 	{
-		// If fs_homepath == fs_extrapath, don't bother
-		if (Q_stricmp(fs_homepath->string,fs_extrapath->string))
-		{
-			// search extrapath
-			ospath = FS_BuildOSPath( fs_extrapath->string, filename, "" );
-			ospath[strlen(ospath)-1] = '\0';
-
-			if ( fs_debug->integer )
-			{
-				Com_Printf( "FS_SV_FOpenFileRead (fs_extrapath): %s\n", ospath );
-			}
-
-			fsh[f].handleFiles.file.o = fopen( ospath, "rb" );
-			fsh[f].handleSync = qfalse;
-		}
 		if (!fsh[f].handleFiles.file.o)
 		{
 			// If fs_homepath == fs_basepath, don't bother
@@ -2421,7 +2393,6 @@ void FS_Path_f( void ) {
 	int				i;
 
 	Com_Printf ("fs_homepath: %s\n", fs_homepath->string);
-	Com_Printf ("fs_extrapath: %s\n", fs_extrapath->string);
 	Com_Printf ("fs_basepath: %s\n", fs_basepath->string);
 	Com_Printf ("fs_game: %s\n", fs_gamedir);
 	Com_Printf ("fs_basegame: %s\n", fs_basegame->string);
@@ -2844,14 +2815,7 @@ static void FS_Startup( const char *gameName )
 		homePath = fs_basepath->string;
 	}
 	FS_CreatePath(homePath);
-	if (!extraPath) {
-		extraPath = "";
-	}
-	if (extraPath[0]) {
-		FS_CreatePath(extraPath);
-	}
 	fs_homepath = Cvar_Get ("fs_homepath", homePath, CVAR_INIT|CVAR_PROTECTED );
-	fs_extrapath = Cvar_Get ("fs_extrapath", extraPath, CVAR_INIT|CVAR_PROTECTED );
 	fs_gamedirvar = Cvar_Get ("fs_game", "", CVAR_LATCH|CVAR_SYSTEMINFO );
 	fs_autogen = Cvar_Get ("fs_autogen", Q3CONFIG_CFG, CVAR_INIT );
 
@@ -2869,9 +2833,6 @@ static void FS_Startup( const char *gameName )
 #endif
 
 	// NOTE: same filtering below for mods and basegame
-	if (fs_extrapath->string[0] && Q_stricmp(fs_extrapath->string,fs_homepath->string)) {
-		FS_AddGameDirectory ( fs_extrapath->string, gameName );
-	}
 	if (fs_homepath->string[0] && Q_stricmp(fs_homepath->string,fs_basepath->string)) {
 		FS_AddGameDirectory ( fs_homepath->string, gameName );
 	}
@@ -2886,9 +2847,6 @@ static void FS_Startup( const char *gameName )
 			FS_AddGameDirectory(fs_apppath->string, fs_basegame->string);
 		}
 #endif
-		if (fs_extrapath->string[0] && Q_stricmp(fs_extrapath->string,fs_homepath->string)) {
-			FS_AddGameDirectory(fs_extrapath->string, fs_basegame->string);
-		}
 		if (fs_homepath->string[0] && Q_stricmp(fs_homepath->string,fs_basepath->string)) {
 			FS_AddGameDirectory(fs_homepath->string, fs_basegame->string);
 		}
@@ -2904,9 +2862,6 @@ static void FS_Startup( const char *gameName )
 			FS_AddGameDirectory(fs_apppath->string, fs_gamedirvar->string);
 		}
 #endif
-		if (fs_extrapath->string[0] && Q_stricmp(fs_extrapath->string,fs_homepath->string)) {
-			FS_AddGameDirectory(fs_extrapath->string, fs_gamedirvar->string);
-		}
 		if (fs_homepath->string[0] && Q_stricmp(fs_homepath->string,fs_basepath->string)) {
 			FS_AddGameDirectory(fs_homepath->string, fs_gamedirvar->string);
 		}
@@ -3248,7 +3203,6 @@ void FS_InitFilesystem( void ) {
 	// has already been initialized
 	Com_StartupVariable( "fs_basepath" );
 	Com_StartupVariable( "fs_homepath" );
-	Com_StartupVariable( "fs_extrapath" );
 	Com_StartupVariable( "fs_basegame" );
 	Com_StartupVariable( "fs_game" );
 	Com_StartupVariable( "fs_autogen" );

@@ -14,7 +14,7 @@ ifeq ($(COMPILE_PLATFORM),sunos)
 endif
 ifeq ($(COMPILE_PLATFORM),darwin)
   # Apple does some things a little differently...
-  COMPILE_ARCH=$(shell uname -p | sed -e s/i.86/x86/)
+  COMPILE_ARCH=$(shell uname -m | sed -e s/i.86/x86/)
 endif
 ifeq ($(COMPILE_PLATFORM),windowsnt)
   # Sometimes msys uname returns this
@@ -420,7 +420,7 @@ ifeq ($(PLATFORM),linux)
 
   SHLIBEXT=so
   SHLIBCFLAGS=-fPIC -fvisibility=hidden
-  SHLIBLDFLAGS=-shared $(LDFLAGS) -Wl,--no-allow-shlib-undefined
+  SHLIBLDFLAGS=-shared $(LDFLAGS) 
 
   BASE_CFLAGS+=-I/usr/X11R6/include
   CLIENT_LDFLAGS=-L/usr/X11R6/$(LIB)
@@ -498,7 +498,7 @@ ifeq ($(PLATFORM),darwin)
     BASE_CFLAGS += -faltivec
   endif
   ifeq ($(ARCH),x86)
-    OPTIMIZE += -march=prescott -mfpmath=sse
+    OPTIMIZE += -mfpmath=sse
   endif
   ifeq ($(ARCH),x86_64)
     OPTIMIZE += -mfpmath=sse
@@ -617,7 +617,7 @@ ifeq ($(PLATFORM),darwin)
 
   SHLIBEXT=dylib
   SHLIBCFLAGS=-fPIC -fno-common
-  SHLIBLDFLAGS=-dynamiclib $(LDFLAGS) -Wl,--no-allow-shlib-undefined
+  SHLIBLDFLAGS=-dynamiclib $(LDFLAGS) 
 
   NOTSHLIBCFLAGS=-mdynamic-no-pic
 
@@ -700,7 +700,7 @@ ifeq ($(PLATFORM),mingw32)
 
   SHLIBEXT=dll
   SHLIBCFLAGS=
-  SHLIBLDFLAGS=-shared $(LDFLAGS) -Wl,--no-allow-shlib-undefined
+  SHLIBLDFLAGS=-shared $(LDFLAGS)
 
   BINEXT=.exe
 
@@ -837,7 +837,7 @@ ifeq ($(PLATFORM),freebsd)
 
   SHLIBEXT=so
   SHLIBCFLAGS=-fPIC
-  SHLIBLDFLAGS=-shared $(LDFLAGS) -Wl,--no-allow-shlib-undefined
+  SHLIBLDFLAGS=-shared $(LDFLAGS)
 
   # don't need -ldl (FreeBSD)
   LIBS+=-lm
@@ -900,7 +900,7 @@ ifeq ($(PLATFORM),openbsd)
   SHLIBEXT=so
   SHLIBNAME=.$(SHLIBEXT)
   SHLIBCFLAGS=-fPIC
-  SHLIBLDFLAGS=-shared $(LDFLAGS) -Wl,--no-allow-shlib-undefined
+  SHLIBLDFLAGS=-shared $(LDFLAGS)
 
   LIBS=-lm
 
@@ -933,7 +933,7 @@ ifeq ($(PLATFORM),netbsd)
   LIBS=-lm
   SHLIBEXT=so
   SHLIBCFLAGS=-fPIC
-  SHLIBLDFLAGS=-shared $(LDFLAGS) -Wl,--no-allow-shlib-undefined
+  SHLIBLDFLAGS=-shared $(LDFLAGS)
   CLIENT_LIBS=-lpthread
 
   BASE_CFLAGS = -Wall -fno-strict-aliasing -Wimplicit -Wstrict-prototypes
@@ -967,7 +967,7 @@ ifeq ($(PLATFORM),irix64)
 
   SHLIBEXT=so
   SHLIBCFLAGS=
-  SHLIBLDFLAGS=-shared -Wl,--no-allow-shlib-undefined
+  SHLIBLDFLAGS=-shared
 
   LIBS=-ldl -lm -lgen
   # FIXME: The X libraries probably aren't necessary?
@@ -1033,7 +1033,7 @@ ifeq ($(PLATFORM),sunos)
 
   SHLIBEXT=so
   SHLIBCFLAGS=-fPIC
-  SHLIBLDFLAGS=-shared $(LDFLAGS) -Wl,--no-allow-shlib-undefined
+  SHLIBLDFLAGS=-shared $(LDFLAGS)
 
   LIBS=-lsocket -lnsl -ldl -lm
 
@@ -1050,7 +1050,7 @@ else # ifeq sunos
 
   SHLIBEXT=so
   SHLIBCFLAGS=-fPIC
-  SHLIBLDFLAGS=-shared -Wl,--no-allow-shlib-undefined
+  SHLIBLDFLAGS=-shared
 
 endif #Linux
 endif #darwin
@@ -1677,11 +1677,6 @@ else
     $(B)/client/con_tty.o
 endif
 
-ifeq ($(PLATFORM),darwin)
-  Q3OBJ += \
-    $(B)/client/sys_cocoa.o
-endif
-
 ifeq ($(USE_MUMBLE),1)
   Q3OBJ += \
     $(B)/client/libmumblelink.o
@@ -1945,6 +1940,9 @@ $(B)/clienttty/%.o: $(ZDIR)/%.c
 	$(DO_TTY_CC)
 
 $(B)/clienttty/%.o: $(SYSDIR)/%.c
+	$(DO_TTY_CC)
+
+$(B)/clienttty/%.o: $(SYSDIR)/%.m
 	$(DO_TTY_CC)
 
 $(B)/clienttty/%.o: $(NDIR)/%.c
